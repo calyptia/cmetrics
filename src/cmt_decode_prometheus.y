@@ -54,6 +54,7 @@ metrics:
 metric:
     header samples
   | samples
+  | header
 ;
 
 header:

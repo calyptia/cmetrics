@@ -821,7 +821,11 @@ end:
 
 static int finish_metric(struct cmt_decode_prometheus_context *context)
 {
-    int rv;
+    int rv = 0;
+
+    if (mk_list_is_empty(&context->metric.samples) == 0) {
+        goto end;
+    }
 
     switch (context->metric.type) {
         case COUNTER:
@@ -841,8 +845,8 @@ static int finish_metric(struct cmt_decode_prometheus_context *context)
             break;
     }
 
+end:
     reset_context(context);
-
     return rv;
 }
 

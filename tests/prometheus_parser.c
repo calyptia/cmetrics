@@ -402,13 +402,6 @@ void test_bison_parsing_error()
     //             "syntax error, unexpected end of file") == 0);
 
     status = cmt_decode_prometheus_create(&cmt,
-            "# TYPE metric_name counter", 0, &opts);
-    TEST_CHECK(status == CMT_DECODE_PROMETHEUS_SYNTAX_ERROR);
-    // TEST_CHECK(strcmp(errbuf,
-    //             "syntax error, unexpected end of file, "
-    //             "expecting IDENTIFIER") == 0);
-
-    status = cmt_decode_prometheus_create(&cmt,
             "# HELP metric_name some docstring\n"
             "# TYPE metric_name counter\n"
             "metric_name", 0, &opts);
@@ -798,6 +791,53 @@ void test_issue_fluent_bit_5541()
     cmt_decode_prometheus_destroy(cmt);
 }
 
+void test_empty_metrics()
+{
+    int status;
+    cmt_sds_t result;
+    struct cmt *cmt;
+    struct cmt_decode_prometheus_parse_opts opts;
+    memset(&opts, 0, sizeof(opts));
+    const char in_buf[] =
+        "# HELP kube_cronjob_annotations Kubernetes annotations converted to Prometheus labels.\n"
+        "# TYPE kube_cronjob_annotations gauge\n"
+        "# HELP kube_cronjob_labels Kubernetes labels converted to Prometheus labels.\n"
+        "# TYPE kube_cronjob_labels gauge\n"
+        "# HELP kube_cronjob_info Info about cronjob.\n"
+        "# TYPE kube_cronjob_info gauge\n"
+        "# HELP kube_cronjob_created Unix creation timestamp\n"
+        "# TYPE kube_cronjob_created gauge\n"
+        "# HELP kube_cronjob_status_active Active holds pointers to currently running jobs.\n"
+        "# TYPE kube_cronjob_status_active gauge\n"
+        "# HELP kube_cronjob_status_last_schedule_time LastScheduleTime keeps information of when was the last time the job was successfully scheduled.\n"
+        "# TYPE kube_cronjob_status_last_schedule_time gauge\n"
+        "# HELP kube_cronjob_status_last_successful_time LastSuccessfulTime keeps information of when was the last time the job was completed successfully.\n"
+        "# TYPE kube_cronjob_status_last_successful_time gauge\n"
+        "# HELP kube_cronjob_spec_suspend Suspend flag tells the controller to suspend subsequent executions.\n"
+        "# TYPE kube_cronjob_spec_suspend gauge\n"
+        "# HELP kube_cronjob_spec_starting_deadline_seconds Deadline in seconds for starting the job if it misses scheduled time for any reason.\n"
+        "# TYPE kube_cronjob_spec_starting_deadline_seconds gauge\n"
+        "# HELP kube_cronjob_next_schedule_time Next time the cronjob should be scheduled. The time after lastScheduleTime, or after the cron job's creation time if it's never been scheduled. Use this to determine if the job is delayed.\n"
+        "# TYPE kube_cronjob_next_schedule_time gauge\n"
+        "# HELP kube_cronjob_metadata_resource_version Resource version representing a specific version of the cronjob.\n"
+        "# TYPE kube_cronjob_metadata_resource_version gauge\n"
+        "# HELP kube_cronjob_spec_successful_job_history_limit Successful job history limit tells the controller how many completed jobs should be preserved.\n"
+        "# TYPE kube_cronjob_spec_successful_job_history_limit gauge\n"
+        "# HELP kube_cronjob_spec_failed_job_history_limit Failed job history limit tells the controller how many failed jobs should be preserved.\n"
+        "# TYPE kube_cronjob_spec_failed_job_history_limit gauge\n"
+        ;
+
+    const char expected[] = "";
+
+    cmt_initialize();
+    status = cmt_decode_prometheus_create(&cmt, in_buf, 0, &opts);
+    TEST_CHECK(status == 0);
+    result = cmt_encode_prometheus_create(cmt, CMT_TRUE);
+    TEST_CHECK(strcmp(result, expected) == 0);
+    cmt_sds_destroy(result);
+    cmt_decode_prometheus_destroy(cmt);
+}
+
 TEST_LIST = {
     {"header_help", test_header_help},
     {"header_type", test_header_type},
@@ -823,5 +863,6 @@ TEST_LIST = {
     {"summary", test_summary},
     {"null_labels", test_null_labels},
     {"issue_fluent_bit_5541", test_issue_fluent_bit_5541},
+    {"empty_metrics", test_empty_metrics},
     { 0 }
 };
